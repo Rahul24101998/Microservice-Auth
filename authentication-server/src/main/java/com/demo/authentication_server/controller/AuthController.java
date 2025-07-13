@@ -60,4 +60,24 @@ public class AuthController {
         return "Token is valid";
     }
 
+    @PostMapping("/login")
+    public ResponseEntity<String> login(@RequestBody AuthRequest authRequest) {
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            authRequest.getUserName(),
+                            authRequest.getPassword()
+                    )
+            );
+
+            if (authentication.isAuthenticated()) {
+                String token = authService.GenerateToken(authRequest);
+                return ResponseEntity.ok(token);
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+    }
+
 }
