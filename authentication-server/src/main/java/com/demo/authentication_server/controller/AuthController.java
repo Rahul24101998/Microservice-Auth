@@ -8,8 +8,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.authentication.AuthenticationManager;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/auth")
@@ -39,7 +42,11 @@ public class AuthController {
             );
 
             if (authentication.isAuthenticated()) {
-                String token = authService.GenerateToken(authRequest);
+                List<String> roles = authentication.getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .toList();
+                String token = authService.GenerateToken(authRequest,roles);
+
                 return ResponseEntity.ok(token);
             }
         } catch (Exception e) {
@@ -71,8 +78,13 @@ public class AuthController {
             );
 
             if (authentication.isAuthenticated()) {
-                String token = authService.GenerateToken(authRequest);
-                return ResponseEntity.ok(token);
+                List<String> roles = authentication.getAuthorities().stream()
+                        .map(GrantedAuthority::getAuthority)
+                        .toList();
+                String token = authService.GenerateToken(authRequest, roles);
+                return ResponseEntity.ok()
+                        .header("Authorization", "Bearer " + token)
+                        .body("Login successful");
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");

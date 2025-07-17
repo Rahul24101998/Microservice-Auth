@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class AuthService {
 
@@ -31,8 +33,8 @@ public class AuthService {
         return ("User " + user.getUserName() + " saved successfully.");
     }
 
-    public String GenerateToken(AuthRequest user) {
-            return jwtService.generateToken(user.getUserName());
+    public String GenerateToken(AuthRequest user,List<String> roles) {
+            return jwtService.generateToken(user.getUserName(), roles);
     }
 
     public String RefreshToken(String token) {

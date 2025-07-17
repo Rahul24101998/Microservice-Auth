@@ -1,11 +1,16 @@
 package com.demo.api_gateway.filter;
 
+import com.demo.api_gateway.utils.JwtUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.List;
 
 @Component
 public class AuthenticationFilter extends AbstractGatewayFilterFactory<AuthenticationFilter.Config> {
@@ -15,6 +20,12 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
 
     @Autowired
     private RestTemplate template;
+
+    @Autowired
+    Authorization authorization;
+
+    @Autowired
+    JwtUtils jwtUtils;
 
     public AuthenticationFilter() {
         super(Config.class);
@@ -43,6 +54,11 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                }
                try {
                    template.getForObject("http://authentication-server/auth/validateToken?token=" + authHeader, String.class);
+                   List<String> userRoles = jwtUtils.getRoles(authHeader);
+                   String path = exchange.getRequest().getURI().getPath();
+                   if (!authorization.isAuthorized(path, userRoles)) {
+                       throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not authorized to access this resource");
+                   }
 
                } catch (Exception e) {
                      throw new RuntimeException("Invalid token: " + e.getMessage());

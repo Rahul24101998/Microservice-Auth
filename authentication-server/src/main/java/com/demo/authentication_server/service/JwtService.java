@@ -12,6 +12,7 @@ import javax.crypto.SecretKey;
 import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Component
@@ -27,7 +28,11 @@ public class JwtService {
     public void validateToken(final String token) {
         Jwts.parser().setSigningKey(getSignKey()).build().parseClaimsJws(token);
     }
-
+    public String generateToken(String userName, List<String> roles) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("roles", roles);
+        return createToken(claims, userName);
+    }
 
     public String generateToken(String userName) {
         Map<String, Object> claims = new HashMap<>();
@@ -56,6 +61,14 @@ public class JwtService {
                 .parseSignedClaims(token)
                 .getPayload()
                 .getSubject();
+    }
+    public List<String> getRoles(String token) {
+        Claims claims = Jwts.parser()
+                .verifyWith((SecretKey) getSignKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+        return claims.get("roles", List.class);
     }
 
 }
